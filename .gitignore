@@ -1,0 +1,4 @@
+*.csv
+CMakeCache.txt
+cmake-build-debug/
+pigpio.*
