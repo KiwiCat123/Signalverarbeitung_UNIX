@@ -38,11 +38,11 @@ void* consoleOut(void* p) {
     time_t oldTimeSec = 0;
     int ret = 0;
 
-	_generator_ready = true; //reset generator flag
+	_generator_ready = true; //reset generator flag;
 
 	while (!abortSig) {
 		while (_generator_ready) { //wait for generator flag to get set
-            if (abortSig) return 0;
+            if (abortSig) return NULL;
         }
         _generator_ready = true; //reset generator flag
 		//read new sample
@@ -71,4 +71,6 @@ void* consoleOut(void* p) {
 		printf("%i, %.4f ms\n", sampleOut, TimeInDouble);
 		gpioWrite(OUT_PIN,PI_CLEAR);
 	}
+
+    return NULL;
 }

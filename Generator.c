@@ -32,8 +32,9 @@ int generate_RT(enum eSIGNAL eSignal, SignalPoint sAmplitude, unsigned long ulPe
 	};
 
     _generator_ready = false; //new sample ready
-	while (_signal_generate); //wait until set to 0 again from other thread
-	_signal_generate = true; //reset timer flag
+    ret = pause(); //wait for signal from timer (pause thread)
+	/*while (_signal_generate); //wait until set to 0 again from other thread
+	_signal_generate = true; //reset timer flag*/
 
 	while (!abortSig) {
 		switch (eSignal) {
@@ -52,8 +53,9 @@ int generate_RT(enum eSIGNAL eSignal, SignalPoint sAmplitude, unsigned long ulPe
 		}
 
         _generator_ready = false; //new sample ready
-		while (_signal_generate); //wait until set to 0 again from other thread
-		_signal_generate = true; //reset timer flag
+        ret = pause(); //wait for signal from timer (pause thread)
+		/*while (_signal_generate); //wait until set to 0 again from other thread
+		_signal_generate = true; //reset timer flag*/
 		
 	}
 
