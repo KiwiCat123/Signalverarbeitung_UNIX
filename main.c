@@ -48,7 +48,7 @@ int main() {
     timer_fnc(); //start timer
 	ret = pthread_create(&ThreadsHandle,NULL,consoleOut, NULL); //output Thread
 	if (ret != 0) return -2;
-	ret = generate_RT(RECTANGLE, MAX_SIG_VALUE, 8, 2); //start generator
+	ret = generate_RT(RECTANGLE, MAX_SIG_VALUE, PERIOD*8, PERIOD); //start generator
     pthread_join(ThreadsHandle,NULL);
     sem_destroy(&OutputSem);
 

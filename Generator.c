@@ -36,13 +36,13 @@ int generate_RT(enum eSIGNAL eSignal, SignalPoint sAmplitude, const unsigned lon
 			newSample = 0;
 		} break;
 		case RECTANGLE: {
-			newSample = _Rectangle(ulCurTime, sAmplitude, 0.0);
+			newSample = _Rectangle((double)ulCurTime, sAmplitude, 0.0);
 		} break;
 		};
 
 		//increase time, check if period is over
 		ulCurTime += ulSamplePeriod;
-		if (ulCurTime > ulPeriod) {
+		if (ulCurTime >= ulPeriod) {
 			ulCurTime -= ulPeriod;
 		}
 
