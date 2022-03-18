@@ -45,9 +45,9 @@ int main() {
 
 	gpioInitialise(); //init gpio lib
 
-	ret = pthread_create(&ThreadsHandle,NULL,consoleOut,&arg); //output Thread
+    timer_fnc(); //start timer
+	ret = pthread_create(&ThreadsHandle,NULL,consoleOut, NULL); //output Thread
 	if (ret != 0) return -2;
-	timer_fnc(); //start Timer
 	ret = generate_RT(RECTANGLE, MAX_SIG_VALUE, 8, 2); //start generator
     pthread_join(ThreadsHandle,NULL);
     sem_destroy(&OutputSem);

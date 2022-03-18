@@ -8,7 +8,8 @@
 
 int writeCSV(SIGNAL_OUT SignalGenerator[], SIGNAL_OUT SignalFiltered[], unsigned long count, char path[]);
 
-void* consoleOut(void*);
+void* consoleOut();
+void* DAC_out(void*);
 
 #define OUT_PIN 22 //GPIO-Pin for output
 

@@ -9,53 +9,48 @@
 
 volatile bool _signal_generate; //timer flag, ready for new sample, false = timer ended
 volatile SignalPoint generateOutBuf; //output buffer for sample
-volatile bool _generator_ready; //flag generator finished new sample, false = ready (new sample ready)
 
 
-int generate_RT(enum eSIGNAL eSignal, SignalPoint sAmplitude, unsigned long ulPeriod, const unsigned long ulSampleRate) {
-	SignalTime dTimePerPoint; //time between 2 points of output signal
-	SignalTime dCurTime = 0; //current time for next point
+int generate_RT(enum eSIGNAL eSignal, SignalPoint sAmplitude, const unsigned long ulPeriod, const unsigned long ulSamplePeriod) {
+	unsigned long ulCurTime = 0; //current time for next point
+    SignalPoint newSample; //generated new sample
     int ret;
 
-	//first point
+	//init generator function
 	switch (eSignal) {
 	case SINUS: {
-		generateOutBuf = 0;
-
+		newSample = 0;
 	} break;
 	case RECTANGLE: {
-		generateOutBuf = _Rectangle(0.0, 0, ulPeriod);
+		newSample = _Rectangle(0.0, 0, (SignalTime)ulPeriod);
 	} break;
 	default: {
 		return -1;
 	}
 	};
 
-    _generator_ready = false; //new sample ready
-    ret = pause(); //wait for signal from timer (pause thread)
-	/*while (_signal_generate); //wait until set to 0 again from other thread
-	_signal_generate = true; //reset timer flag*/
-
+    //generating
 	while (!abortSig) {
 		switch (eSignal) {
 		case SINUS: {
-			generateOutBuf = 0;
+			newSample = 0;
 		} break;
 		case RECTANGLE: {
-			generateOutBuf = _Rectangle(dCurTime, sAmplitude, 0.0);
+			newSample = _Rectangle(ulCurTime, sAmplitude, 0.0);
 		} break;
 		};
 
 		//increase time, check if period is over
-		dCurTime += dTimePerPoint;
-		if (dCurTime > ulPeriod) {
-			dCurTime -= ulPeriod;
+		ulCurTime += ulSamplePeriod;
+		if (ulCurTime > ulPeriod) {
+			ulCurTime -= ulPeriod;
 		}
 
+        while (!_generator_ready) { //wait for generator flag to get reset, until last sample got read from buffer
+            if (abortSig) return 0;
+        }
+        generateOutBuf = newSample; //write new sample in buffer
         _generator_ready = false; //new sample ready
-        ret = pause(); //wait for signal from timer (pause thread)
-		/*while (_signal_generate); //wait until set to 0 again from other thread
-		_signal_generate = true; //reset timer flag*/
 		
 	}
 

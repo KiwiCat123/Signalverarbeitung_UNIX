@@ -5,9 +5,11 @@
 #include "Generator.h"
 #include <time.h>
 #include "pigpio.h"
+#include <unistd.h>
 
 
 void statistic(unsigned long long time_diff);
+volatile bool _generator_ready; //flag generator finished new sample, false = ready (new sample ready)
 
 /*int writeCSV(SIGNAL_OUT SignalGenerator[], SIGNAL_OUT SignalFiltered[], unsigned long count, char path[]) {
 	FILE* outFile;
@@ -27,8 +29,8 @@ void statistic(unsigned long long time_diff);
 	return 0;
 }*/
 
-void* consoleOut(void* p) {
-	SignalPoint sampleOut;
+void* consoleOut() {
+	SignalPoint sampleOut = 0;
 	unsigned long long _time_diff = 0; //time difference between samples
 	struct timespec RawTime;
     long TimeInLong;
@@ -38,15 +40,11 @@ void* consoleOut(void* p) {
     time_t oldTimeSec = 0;
     int ret = 0;
 
-	_generator_ready = true; //reset generator flag;
+    _signal_generate = true; //reset timer flag
+    _generator_ready = true; //reset generator flag
 
 	while (!abortSig) {
-		while (_generator_ready) { //wait for generator flag to get set
-            if (abortSig) return NULL;
-        }
-        _generator_ready = true; //reset generator flag
-		//read new sample
-		sampleOut = generateOutBuf;
+        if(abortSig) return NULL;
 
 		//calculate time between new samples
 		gpioSetMode(OUT_PIN, PI_OUTPUT);
@@ -69,8 +67,35 @@ void* consoleOut(void* p) {
 		statistic((_time_diff / 100));
 
 		printf("%i, %.4f ms\n", sampleOut, TimeInDouble);
+
+        while (_generator_ready) { //wait for generator flag to get set
+            if (abortSig) return NULL;
+        }
+        sampleOut = generateOutBuf; //read new sample from filter
+        _generator_ready = true; //reset filter flag, sample read from buffer
+
 		gpioWrite(OUT_PIN,PI_CLEAR);
+
+        while(_signal_generate) { //wait for timer flag
+            if(abortSig) return NULL;
+        }
+        _signal_generate = true; //reset timer flag
+
 	}
+
+    return NULL;
+}
+
+void* DAC_out(void* p) {
+
+
+    _generator_ready = true; //reset generator flag
+    while(!abortSig) {
+        while (_generator_ready) { //wait for generator flag to get set
+            if (abortSig) return NULL;
+        }
+
+    }
 
     return NULL;
 }
