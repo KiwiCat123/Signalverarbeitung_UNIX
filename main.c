@@ -21,6 +21,7 @@
 volatile bool abortSig; //Signal to end in RT-mode, true = end
 unsigned long long* collectedTimes = NULL; //collected time differences by consoleOut()
 int amount = 0; //amount of collectedTimes
+int spiHandle = 0;
 sem_t OutputSem;
 void result_statistics(); //evaluate collected statistic values
 
@@ -45,8 +46,11 @@ int main() {
 
 	gpioInitialise(); //init gpio lib
 
+    //prepare SPI
+    spiHandle = spiOpen(0,18000000,0x801); //open SPI, chanel 0, 18MHz, Mode 0 + 2Bytes
+
     timer_fnc(); //start timer
-	ret = pthread_create(&ThreadsHandle,NULL,consoleOut, NULL); //output Thread
+	ret = pthread_create(&ThreadsHandle,NULL,DAC_out, NULL); //output Thread
 	if (ret != 0) return -2;
 	ret = generate_RT(RECTANGLE, MAX_SIG_VALUE, PERIOD*8, PERIOD); //start generator
     pthread_join(ThreadsHandle,NULL);
@@ -56,6 +60,7 @@ int main() {
 
     //cleanup
 	gpioWrite(OUT_PIN,PI_CLEAR);
+    ret = spiClose(spiHandle);
 	gpioTerminate();
 	free(collectedTimes);
 

@@ -14,3 +14,4 @@ void* DAC_out(void*);
 #define OUT_PIN 22 //GPIO-Pin for output
 
 extern sem_t OutputSem;
+extern int spiHandle;

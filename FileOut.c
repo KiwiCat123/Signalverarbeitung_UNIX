@@ -6,6 +6,7 @@
 #include <time.h>
 #include "pigpio.h"
 #include <unistd.h>
+#include <limits.h>
 
 
 void statistic(unsigned long long time_diff);
@@ -87,14 +88,29 @@ void* consoleOut() {
 }
 
 void* DAC_out(void* p) {
+    SignalPoint newSample = 0; //raw sample from generator
+    unsigned short sampleOut; //sample prepared for DAC output
+    unsigned short message; //DAC message
 
-
-    _generator_ready = true; //reset generator flag
     while(!abortSig) {
+        //prepare DAC message
+        sampleOut = newSample - SHRT_MIN; //prepare sample for DAC, only positive voltage
+        sampleOut = sampleOut >> 4; //16bit sample to 12bit
+        message = 0x4000 | sampleOut; //add flags SPD=1, PWR=0, R1=R0=0
+
+        printf("%u   %X\n",sampleOut, message);
+
+
         while (_generator_ready) { //wait for generator flag to get set
             if (abortSig) return NULL;
         }
+        newSample = generateOutBuf; //read new sample from filter
+        _generator_ready = true; //reset filter flag, sample read from buffer
 
+        while(_signal_generate) { //wait for timer flag
+            if(abortSig) return NULL;
+        }
+        _signal_generate = true; //reset timer flag
     }
 
     return NULL;
