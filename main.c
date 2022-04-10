@@ -40,14 +40,15 @@ int main() {
 	pthread_t ThreadsHandle;
     int arg = 1;
 
-	signal(SIGINT, SigHandler); //ctrl+c
-
     ret = sem_init(&OutputSem,0,0);
 
 	gpioInitialise(); //init gpio lib
 
+    signal(SIGINT, SigHandler); //ctrl+c
+
     //prepare SPI
-    spiHandle = spiOpen(0,18000000,0x801); //open SPI, chanel 0, 18MHz, Mode 0 + 2Bytes
+    spiHandle = spiOpen(0,1000000,0x801); //open SPI, chanel 0, 1MHz, Mode 0 + 2Bytes
+    printf("%i\n\n",spiHandle);
 
     timer_fnc(); //start timer
 	ret = pthread_create(&ThreadsHandle,NULL,DAC_out, NULL); //output Thread
@@ -61,6 +62,7 @@ int main() {
     //cleanup
 	gpioWrite(OUT_PIN,PI_CLEAR);
     ret = spiClose(spiHandle);
+    printf("\n\n%i\n", ret);
 	gpioTerminate();
 	free(collectedTimes);
 
@@ -95,6 +97,8 @@ void result_statistics() {
 	unsigned long long min = ULLONG_MAX;
 	double temp1;
 	double temp2_convert;
+
+    if(amount <= 0) return;
 
 	for (i = 0; i < amount; i++) {
 		average += collectedTimes[i];
