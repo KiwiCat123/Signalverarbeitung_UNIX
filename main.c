@@ -9,12 +9,7 @@
 #include "Timer.h"
 #include <limits.h>
 #include <pthread.h>
-#include "compile_helper.h"
-#ifdef COMPILE_AMD64_UNIX
 #include "pigpio.h"
-#else
-#include <pigpio.h>
-#endif
 
 #define TEST_SAMPLES 50
 
@@ -47,7 +42,7 @@ int main() {
     signal(SIGINT, SigHandler); //ctrl+c
 
     //prepare SPI
-    spiHandle = spiOpen(0,1000000,0x801); //open SPI, chanel 0, 1MHz, Mode 0 + 2Bytes
+    spiHandle = spiOpen(0,1000000,0x802); //open SPI, chanel 0, 1MHz, Mode 2 + 2Bytes
     printf("%i\n\n",spiHandle);
 
     timer_fnc(); //start timer

@@ -91,14 +91,22 @@ void* DAC_out(void* p) {
     SignalPoint newSample = 0; //raw sample from generator
     unsigned short sampleOut; //sample prepared for DAC output
     unsigned short message; //DAC message
+    unsigned char msgBuf[2];
+    int ret = 0;
 
     while(!abortSig) {
         //prepare DAC message
         sampleOut = newSample - SHRT_MIN; //prepare sample for DAC, only positive voltage
-        sampleOut = sampleOut >> 4; //16bit sample to 12bit
-        message = 0x4000 | sampleOut; //add flags SPD=1, PWR=0, R1=R0=0
+        sampleOut = sampleOut >> 6; //16bit sample to 10bit
+        message = sampleOut << 2; //make space for 2 reserved bits at beginning
+        message |= 0x4000; //add flags SPD=1, PWR=0, R1=R0=0
+        msgBuf[1] = (unsigned char)(message & 0x00FC);
+        msgBuf[0] = (unsigned char)(message >> 8); //gets sent first
 
+        ret = spiWrite(spiHandle, msgBuf, 2); //send message to DAC via SPI
         printf("%u   %X\n",sampleOut, message);
+        printf("%X %X\n", msgBuf[1], msgBuf[0]);
+        printf("return: %i\n\n", ret);
 
 
         while (_generator_ready) { //wait for generator flag to get set
