@@ -6,6 +6,7 @@
 #include <time.h>
 #include "pigpio.h"
 #include <unistd.h>
+#include <limits.h>
 
 
 void statistic(unsigned long long time_diff);
@@ -87,14 +88,37 @@ void* consoleOut() {
 }
 
 void* DAC_out(void* p) {
+    SignalPoint newSample = 0; //raw sample from generator
+    unsigned short sampleOut; //sample prepared for DAC output
+    unsigned short message; //DAC message
+    unsigned char msgBuf[2];
+    int ret = 0;
 
-
-    _generator_ready = true; //reset generator flag
     while(!abortSig) {
+        //prepare DAC message
+        sampleOut = newSample - SHRT_MIN; //prepare sample for DAC, only positive voltage
+        sampleOut = sampleOut >> 6; //16bit sample to 10bit
+        message = sampleOut << 2; //make space for 2 reserved bits at beginning
+        message |= 0x4000; //add flags SPD=1, PWR=0, R1=R0=0
+        msgBuf[1] = (unsigned char)(message & 0x00FC);
+        msgBuf[0] = (unsigned char)(message >> 8); //gets sent first
+
+        ret = spiWrite(spiHandle, msgBuf, 2); //send message to DAC via SPI
+        printf("%u   %X\n",sampleOut, message);
+        printf("%X %X\n", msgBuf[1], msgBuf[0]);
+        printf("return: %i\n\n", ret);
+
+
         while (_generator_ready) { //wait for generator flag to get set
             if (abortSig) return NULL;
         }
+        newSample = generateOutBuf; //read new sample from filter
+        _generator_ready = true; //reset filter flag, sample read from buffer
 
+        while(_signal_generate) { //wait for timer flag
+            if(abortSig) return NULL;
+        }
+        _signal_generate = true; //reset timer flag
     }
 
     return NULL;

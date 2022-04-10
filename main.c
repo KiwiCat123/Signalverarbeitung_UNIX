@@ -9,18 +9,14 @@
 #include "Timer.h"
 #include <limits.h>
 #include <pthread.h>
-#include "compile_helper.h"
-#ifdef COMPILE_AMD64_UNIX
 #include "pigpio.h"
-#else
-#include <pigpio.h>
-#endif
 
 #define TEST_SAMPLES 50
 
 volatile bool abortSig; //Signal to end in RT-mode, true = end
 unsigned long long* collectedTimes = NULL; //collected time differences by consoleOut()
 int amount = 0; //amount of collectedTimes
+int spiHandle = 0;
 sem_t OutputSem;
 void result_statistics(); //evaluate collected statistic values
 
@@ -39,14 +35,18 @@ int main() {
 	pthread_t ThreadsHandle;
     int arg = 1;
 
-	signal(SIGINT, SigHandler); //ctrl+c
-
     ret = sem_init(&OutputSem,0,0);
 
 	gpioInitialise(); //init gpio lib
 
+    signal(SIGINT, SigHandler); //ctrl+c
+
+    //prepare SPI
+    spiHandle = spiOpen(0,1000000,0x802); //open SPI, chanel 0, 1MHz, Mode 2 + 2Bytes
+    printf("%i\n\n",spiHandle);
+
     timer_fnc(); //start timer
-	ret = pthread_create(&ThreadsHandle,NULL,consoleOut, NULL); //output Thread
+	ret = pthread_create(&ThreadsHandle,NULL,DAC_out, NULL); //output Thread
 	if (ret != 0) return -2;
 	ret = generate_RT(RECTANGLE, MAX_SIG_VALUE, PERIOD*8, PERIOD); //start generator
     pthread_join(ThreadsHandle,NULL);
@@ -56,6 +56,8 @@ int main() {
 
     //cleanup
 	gpioWrite(OUT_PIN,PI_CLEAR);
+    ret = spiClose(spiHandle);
+    printf("\n\n%i\n", ret);
 	gpioTerminate();
 	free(collectedTimes);
 
@@ -90,6 +92,8 @@ void result_statistics() {
 	unsigned long long min = ULLONG_MAX;
 	double temp1;
 	double temp2_convert;
+
+    if(amount <= 0) return;
 
 	for (i = 0; i < amount; i++) {
 		average += collectedTimes[i];

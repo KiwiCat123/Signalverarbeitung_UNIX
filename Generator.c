@@ -67,7 +67,7 @@ unsigned long generate(SIGNAL_OUT** SignalReturn, enum eSIGNAL eSignal, SignalPo
 
 	if (!SignalReturn) return 0; //output buffer available?
 
-	dTimePerPoint = 1.0 / ullSampleRate;
+	dTimePerPoint = 1.0 / (double)ullSampleRate;
 	ulMaxPoints = (unsigned long)(dLength / dTimePerPoint) + 1;
 	SignalOut = malloc(ulMaxPoints * sizeof(SIGNAL_OUT));
 	if (!SignalOut) return 0;
