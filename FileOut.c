@@ -7,10 +7,9 @@
 #include "pigpio.h"
 #include <unistd.h>
 #include <limits.h>
-
+#include "Timer.h"
 
 void statistic(unsigned long long time_diff);
-volatile bool _generator_ready; //flag generator finished new sample, false = ready (new sample ready)
 
 /*int writeCSV(SIGNAL_OUT SignalGenerator[], SIGNAL_OUT SignalFiltered[], unsigned long count, char path[]) {
 	FILE* outFile;

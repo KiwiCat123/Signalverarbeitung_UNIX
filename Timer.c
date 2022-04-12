@@ -1,7 +1,8 @@
 #include "Timer.h"
 #include <time.h>
 #include <signal.h>
-#include "Generator.h"
+
+volatile bool _signal_generate; //timer flag, ready for new sample, false = timer ended
 
 void Timer_Sig_Handler(int a) {
     _signal_generate = 0;

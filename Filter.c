@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <limits.h>
 
+volatile SignalPoint filterOutBuf; //output buffer for single sample from filter
+volatile bool _signal_out; //sample ready for output flag, false = ready (new sample ready)
+
 const double dCoeff[9] = {
    0.005069883484836,  0.02935816274752,   0.1107437912658,   0.2193406809055,
 	 0.2709749631927,   0.2193406809055,   0.1107437912658,  0.02935816274752,

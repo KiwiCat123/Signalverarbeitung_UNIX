@@ -7,9 +7,8 @@
 #include "FileOut.h"
 #include <stdbool.h>
 
-volatile bool _signal_generate; //timer flag, ready for new sample, false = timer ended
 volatile SignalPoint generateOutBuf; //output buffer for sample
-
+volatile bool _generator_ready; //flag generator finished new sample, false = ready (new sample ready)
 
 int generate_RT(enum eSIGNAL eSignal, SignalPoint sAmplitude, const unsigned long ulPeriod, const unsigned long ulSamplePeriod) {
 	unsigned long ulCurTime = 0; //current time for next point
