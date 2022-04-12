@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include "Timer.h"
+#include "Filter_1.h"
 
 void statistic(unsigned long long time_diff);
 
@@ -41,7 +42,7 @@ void* consoleOut() {
     int ret = 0;
 
     _signal_generate = true; //reset timer flag
-    _generator_ready = true; //reset generator flag
+    _signal_out = true; //reset filter flag
 
 	while (!abortSig) {
         if(abortSig) return NULL;
@@ -68,11 +69,11 @@ void* consoleOut() {
 
 		printf("%i, %.4f ms\n", sampleOut, TimeInDouble);
 
-        while (_generator_ready) { //wait for generator flag to get set
+        while (_signal_out) { //wait for generator flag to get set
             if (abortSig) return NULL;
         }
-        sampleOut = generateOutBuf; //read new sample from filter
-        _generator_ready = true; //reset filter flag, sample read from buffer
+        sampleOut = filterOutBuf; //read new sample from filter
+        _signal_out = true; //reset filter flag, sample read from buffer
 
 		gpioWrite(OUT_PIN,PI_CLEAR);
 

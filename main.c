@@ -32,7 +32,7 @@ int main() {
 	unsigned long long ullSampleFrq = SAMPLE_FRQ;
 	char path[] = "out.csv"; //generated signal file
 	int ret = -5;
-	pthread_t ThreadsHandle;
+	pthread_t ThreadsHandle[2];
     int arg = 1;
 
     ret = sem_init(&OutputSem,0,0);
@@ -46,10 +46,13 @@ int main() {
     printf("%i\n\n",spiHandle);
 
     timer_fnc(); //start timer
-	ret = pthread_create(&ThreadsHandle,NULL,consoleOut, NULL); //output Thread
+	ret = pthread_create(&(ThreadsHandle[0]),NULL,consoleOut, NULL); //output Thread
 	if (ret != 0) return -2;
+    ret = pthread_create(&(ThreadsHandle[1]),NULL,filter_RT, NULL); //filter Thread
+    if (ret != 0) return -2;
 	ret = generate_RT(RECTANGLE, MAX_SIG_VALUE, PERIOD*8, PERIOD); //start generator
-    pthread_join(ThreadsHandle,NULL);
+    pthread_join(ThreadsHandle[0],NULL);
+    pthread_join(ThreadsHandle[1],NULL);
     sem_destroy(&OutputSem);
 
 	result_statistics();
