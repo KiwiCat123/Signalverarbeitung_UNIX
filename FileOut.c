@@ -88,7 +88,7 @@ void* consoleOut() {
 }
 
 void* DAC_out(void* p) {
-    SignalPoint newSample = 0; //raw sample from generator
+    SignalPoint newSample = 0; //raw sample from filter
     unsigned short sampleOut; //sample prepared for DAC output
     unsigned short message; //DAC message
     unsigned char msgBuf[2];
@@ -104,16 +104,16 @@ void* DAC_out(void* p) {
         msgBuf[0] = (unsigned char)(message >> 8); //gets sent first
 
         ret = spiWrite(spiHandle, msgBuf, 2); //send message to DAC via SPI
-        printf("%u   %X\n",sampleOut, message);
+        /*printf("%u   %X\n",sampleOut, message);
         printf("%X %X\n", msgBuf[1], msgBuf[0]);
-        printf("return: %i\n\n", ret);
+        printf("return: %i\n\n", ret);*/
 
 
-        while (_generator_ready) { //wait for generator flag to get set
+        while (_signal_out) { //wait for generator flag to get set
             if (abortSig) return NULL;
         }
-        newSample = generateOutBuf; //read new sample from filter
-        _generator_ready = true; //reset filter flag, sample read from buffer
+        newSample = filterOutBuf; //read new sample from filter
+        _signal_out = true; //reset filter flag, sample read from buffer
 
         while(_signal_generate) { //wait for timer flag
             if(abortSig) return NULL;

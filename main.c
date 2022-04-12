@@ -42,11 +42,11 @@ int main() {
     signal(SIGINT, SigHandler); //ctrl+c
 
     //prepare SPI
-    //spiHandle = spiOpen(0,1000000,0x802); //open SPI, chanel 0, 1MHz, Mode 2 + 2Bytes
+    spiHandle = spiOpen(0,1000000,0x802); //open SPI, chanel 0, 1MHz, Mode 2 + 2Bytes
     printf("%i\n\n",spiHandle);
 
     timer_fnc(); //start timer
-	ret = pthread_create(&(ThreadsHandle[0]),NULL,consoleOut, NULL); //output Thread
+	ret = pthread_create(&(ThreadsHandle[0]),NULL,DAC_out, NULL); //output Thread
 	if (ret != 0) return -2;
     ret = pthread_create(&(ThreadsHandle[1]),NULL,filter_RT, NULL); //filter Thread
     if (ret != 0) return -2;

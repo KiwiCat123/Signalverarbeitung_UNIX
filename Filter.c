@@ -46,7 +46,7 @@ SIGNAL_OUT* filter(SIGNAL_OUT SignalInput[], unsigned long amount) {
 	return FilterOutput;
 }
 
-int filter_RT() {
+void* filter_RT() {
     SignalPoint sampleBuffer[FILTER_LENGTH] = { 0,0,0,0,0,0,0,0,0 };
     SignalPoint* sampleBufPtr = &(sampleBuffer[0]);
     int bufferPos = 0;
@@ -64,7 +64,7 @@ int filter_RT() {
             bufferPos = FILTER_LENGTH - 1;
 
         while (_generator_ready) { //wait for generator flag to get set
-            if (abortSig) return -1;
+            if (abortSig) return NULL;
         }
         sampleBuffer[bufferPos] = generateOutBuf; //read new sample
         _generator_ready = true; //reset generator flag, sample read from buffer
@@ -74,12 +74,12 @@ int filter_RT() {
         if (dResult > MAX_SIG_VALUE) dResult = MAX_SIG_VALUE; //prevent overflow
         else if (dResult < MIN_SIG_VALUE) dResult = MIN_SIG_VALUE;
         while (!_signal_out) { //wait for output to read last sample
-            if (abortSig) return -1;
+            if (abortSig) return NULL;
         }
         filterOutBuf = (SignalPoint)dResult; //write filtered sample in output buffer
         _signal_out = false; //new sample ready (filtered)
         dResult = 0.0;
     }
 
-    return 0;
+    return NULL;
 }
