@@ -89,30 +89,39 @@ void* consoleOut() {
 
 void* DAC_out(void* p) {
     SignalPoint newSample = 0; //raw sample from filter
+    SignalPoint generatorSample = 0; //unfiltered sample
     unsigned short sampleOut; //sample prepared for DAC output
     unsigned short message; //DAC message
     unsigned char msgBuf[2];
     int ret = 0;
 
     while(!abortSig) {
-        //prepare DAC message
+        //prepare DAC message (filtered sample)
         sampleOut = newSample - SHRT_MIN; //prepare sample for DAC, only positive voltage
         sampleOut = sampleOut >> 6; //16bit sample to 10bit
         message = sampleOut << 2; //make space for 2 reserved bits at beginning
-        message |= 0x4000; //add flags SPD=1, PWR=0, R1=R0=0
+        message |= 0x5000; //add flags SPD=1, PWR=0, R1=0, R0=1 0101
         msgBuf[1] = (unsigned char)(message & 0x00FC);
         msgBuf[0] = (unsigned char)(message >> 8); //gets sent first
-
-        ret = spiWrite(spiHandle, msgBuf, 2); //send message to DAC via SPI
+        ret = spiWrite(spiHandle, msgBuf, 2); //send message to DAC via SPI (OUTB buffer)
         /*printf("%u   %X\n",sampleOut, message);
         printf("%X %X\n", msgBuf[1], msgBuf[0]);
         printf("return: %i\n\n", ret);*/
 
+        //DAC message (unfiltered sample)
+        sampleOut = generatorSample - SHRT_MIN;
+        sampleOut = sampleOut >> 6;
+        message = sampleOut << 2;
+        message |= 0xC000; //SPD=1, PWR=0, R1=1, R0=0 1100
+        msgBuf[1] = (unsigned char)(message & 0x00FC);
+        msgBuf[0] = (unsigned char)(message >> 8); //gets sent first
+        ret = spiWrite(spiHandle, msgBuf, 2); //send message to DAC via SPI (OUTA and buffer updated)
 
         while (_signal_out) { //wait for generator flag to get set
             if (abortSig) return NULL;
         }
         newSample = filterOutBuf; //read new sample from filter
+        generatorSample = genSample;
         _signal_out = true; //reset filter flag, sample read from buffer
 
         while(_signal_generate) { //wait for timer flag

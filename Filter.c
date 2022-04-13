@@ -5,6 +5,7 @@
 #include "Generator.h"
 
 volatile SignalPoint filterOutBuf; //output buffer for single sample from filter
+volatile SignalPoint genSample = 0; //saved sample from generator (for output)
 volatile bool _signal_out; //sample ready for output flag, false = ready (new sample ready)
 
 const double dCoeff[9] = {
@@ -66,7 +67,7 @@ void* filter_RT() {
         while (_generator_ready) { //wait for generator flag to get set
             if (abortSig) return NULL;
         }
-        sampleBuffer[bufferPos] = generateOutBuf; //read new sample
+        genSample = sampleBuffer[bufferPos] = generateOutBuf; //read new sample
         _generator_ready = true; //reset generator flag, sample read from buffer
 
         if (dResult > 0) dResult += 0.5; //round result for integer conversion
