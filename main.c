@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include "Generator.h"
@@ -17,13 +18,15 @@ volatile bool abortSig; //Signal to end in RT-mode, true = end
 unsigned long long* collectedTimes = NULL; //collected time differences by consoleOut()
 int amount = 0; //amount of collectedTimes
 int spiHandle = 0;
-sem_t OutputSem;
 void result_statistics(); //evaluate collected statistic values
 struct OUTARGS OutArgs;
 
 void SigHandler(int a) {
 	printf("ctrl-c!\n");
 	abortSig = true; //signals threads to abort in RT-mode
+    sem_post(&OutputSem);
+    sem_post(&FilterSem);
+    sem_post(&GeneratorSem);
 }
 
 int main() {
@@ -31,13 +34,15 @@ int main() {
 	SIGNAL_OUT* aFilteredOutput = NULL; //collected samples from filter
 	unsigned long ulCountPoints = 0; //number of overall points of output signal
 	unsigned long long ullSampleFrq = SAMPLE_FRQ;
-	char path[] = "out.csv"; //generated signal file
 	int ret = -5;
 	pthread_t ThreadsHandle[2];
     int ThreadsReturn[1];
     int arg = 1;
 
+    //create semaphores
     ret = sem_init(&OutputSem,0,0);
+    ret = sem_init(&GeneratorSem,0,0);
+    ret = sem_init(&FilterSem,0,0);
 
 	gpioInitialise(); //init gpio lib
 
@@ -50,10 +55,11 @@ int main() {
     timer_fnc(); //start timer
 
     //prepare args for output functions
-    OutArgs.cnt = 2;
-    OutArgs.fnc = malloc(sizeof(OutArgs.fnc));
+    OutArgs.cnt = 3;
+    OutArgs.fnc = malloc(sizeof(OutArgs.fnc)*OutArgs.cnt);
     OutArgs.fnc[0] = (int*)&consoleOut;
     OutArgs.fnc[1] = (int*)&DAC_out;
+    OutArgs.fnc[2] = (int*)&CSV_out;
 
 	ret = pthread_create(&(ThreadsHandle[0]), NULL, (void *(*)(void *)) &OutputFnc, &OutArgs); //output Thread
 	if (ret != 0) return -2;
@@ -62,15 +68,18 @@ int main() {
 	ret = generate_RT(RECTANGLE, MAX_SIG_VALUE, PERIOD*8, PERIOD); //start generator
     pthread_join(ThreadsHandle[0], (void**)&(ThreadsReturn[0]));
     pthread_join(ThreadsHandle[1],NULL);
-    sem_destroy(&OutputSem);
 
 	result_statistics();
 
     //cleanup
+    sem_destroy(&OutputSem);
+    sem_destroy(&GeneratorSem);
+    sem_destroy(&FilterSem);
 	gpioWrite(OUT_PIN,PI_CLEAR);
     ret = spiClose(spiHandle);
     printf("\n\n%i\n", ret);
 	gpioTerminate();
+    ret = fcloseall();
 	free(collectedTimes);
     free(OutArgs.fnc);
 

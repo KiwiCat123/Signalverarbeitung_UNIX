@@ -1,11 +1,18 @@
 #include "Timer.h"
 #include <time.h>
 #include <signal.h>
+#include <semaphore.h>
+#include "Filter_1.h"
+#include "Generator.h"
+#include "FileOut.h"
 
 volatile bool _signal_generate; //timer flag, ready for new sample, false = timer ended
 
 void Timer_Sig_Handler(int a) {
     _signal_generate = 0;
+    sem_post(&OutputSem);
+    sem_post(&FilterSem);
+    sem_post(&GeneratorSem);
 }
 
 void timer_fnc() {

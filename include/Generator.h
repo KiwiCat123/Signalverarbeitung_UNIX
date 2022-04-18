@@ -1,6 +1,7 @@
 #pragma once
 #include "Samples.h"
 #include <stdbool.h>
+#include <semaphore.h>
 
 enum eSIGNAL {SINUS, RECTANGLE};
 
@@ -12,3 +13,5 @@ int generate_RT(enum eSIGNAL eSignal, SignalPoint sAmplitude, const unsigned lon
 extern volatile bool _generator_ready; //flag generator finished new sample, false = ready (new sample ready)
 extern volatile bool abortSig; //Signal to end in RT-mode, true = end
 extern volatile SignalPoint generateOutBuf; //output buffer for single sample from generator
+
+extern sem_t GeneratorSem;

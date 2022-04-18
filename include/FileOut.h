@@ -16,7 +16,7 @@ int writeCSV(SIGNAL_OUT SignalGenerator[], SIGNAL_OUT SignalFiltered[], unsigned
 int consoleOut();
 int DAC_out();
 int CSV_out();
-int OutputFnc(struct OUTARGS*);
+int OutputFnc(const struct OUTARGS*);
 
 #define OUT_PIN 22 //GPIO-Pin for output
 
