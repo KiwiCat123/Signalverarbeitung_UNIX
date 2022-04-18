@@ -58,6 +58,9 @@ void* filter_RT() {
     _generator_ready = true;
 
     while (!abortSig) {
+        sem_wait(&FilterSem);
+        if(abortSig) return NULL;
+
         for (i = 0; i < FILTER_LENGTH; i++) {
             dResult += dCoeff[i] * (double)sampleBuffer[bufferPos];
             bufferPos = (bufferPos + 1) % FILTER_LENGTH; //pointer on next position in buffer

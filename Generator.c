@@ -31,6 +31,9 @@ int generate_RT(enum eSIGNAL eSignal, SignalPoint sAmplitude, const unsigned lon
 
     //generating
 	while (!abortSig) {
+        sem_wait(&GeneratorSem);
+        if(abortSig) return -1;
+
 		switch (eSignal) {
 		case SINUS: {
 			newSample = 0;
