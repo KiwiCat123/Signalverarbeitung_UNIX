@@ -19,9 +19,10 @@ int amount = 0; //amount of collectedTimes
 int spiHandle = 0;
 sem_t OutputSem;
 void result_statistics(); //evaluate collected statistic values
+struct OUTARGS OutArgs;
 
 void SigHandler(int a) {
-	printf("ctrl-c!\n");;
+	printf("ctrl-c!\n");
 	abortSig = true; //signals threads to abort in RT-mode
 }
 
@@ -33,6 +34,7 @@ int main() {
 	char path[] = "out.csv"; //generated signal file
 	int ret = -5;
 	pthread_t ThreadsHandle[2];
+    int ThreadsReturn[1];
     int arg = 1;
 
     ret = sem_init(&OutputSem,0,0);
@@ -46,12 +48,19 @@ int main() {
     printf("%i\n\n",spiHandle);
 
     timer_fnc(); //start timer
-	ret = pthread_create(&(ThreadsHandle[0]),NULL,DAC_out, NULL); //output Thread
+
+    //prepare args for output functions
+    OutArgs.cnt = 2;
+    OutArgs.fnc = malloc(sizeof(int*(*))*OutArgs.cnt);
+    OutArgs.fnc[0] = (int*)&consoleOut;
+    OutArgs.fnc[1] = (int*)&DAC_out;
+
+	ret = pthread_create(&(ThreadsHandle[0]), NULL, (void *(*)(void *)) &OutputFnc, &OutArgs); //output Thread
 	if (ret != 0) return -2;
     ret = pthread_create(&(ThreadsHandle[1]),NULL,filter_RT, NULL); //filter Thread
     if (ret != 0) return -2;
 	ret = generate_RT(RECTANGLE, MAX_SIG_VALUE, PERIOD*8, PERIOD); //start generator
-    pthread_join(ThreadsHandle[0],NULL);
+    pthread_join(ThreadsHandle[0], (void**)&(ThreadsReturn[0]));
     pthread_join(ThreadsHandle[1],NULL);
     sem_destroy(&OutputSem);
 
@@ -63,6 +72,7 @@ int main() {
     printf("\n\n%i\n", ret);
 	gpioTerminate();
 	free(collectedTimes);
+    free(OutArgs.fnc);
 
 	return ret;
 }
