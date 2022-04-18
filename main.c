@@ -51,7 +51,7 @@ int main() {
 
     //prepare args for output functions
     OutArgs.cnt = 2;
-    OutArgs.fnc = malloc(sizeof(int*(*))*OutArgs.cnt);
+    OutArgs.fnc = malloc(sizeof(OutArgs.fnc));
     OutArgs.fnc[0] = (int*)&consoleOut;
     OutArgs.fnc[1] = (int*)&DAC_out;
 
