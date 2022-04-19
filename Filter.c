@@ -39,7 +39,7 @@ SIGNAL_OUT* filter(SIGNAL_OUT SignalInput[], unsigned long amount) {
 
 		FilterOutput[count].time = SignalInput[count].time;
 
-        round(dResult); //round for integer conversion
+        dResult = round(dResult); //round for integer conversion
 		if (dResult > MAX_SIG_VALUE) dResult = MAX_SIG_VALUE; //prevent overflow
 		else if (dResult < MIN_SIG_VALUE) dResult = MIN_SIG_VALUE;
 		FilterOutput[count].point = (short)dResult;
@@ -78,7 +78,7 @@ void* filter_RT() {
         sampleBuffer[bufferPos] = generateOutBuf; //read new sample
         _generator_ready = true; //reset generator flag, sample read from buffer
 
-        round(dResult); //round for integer conversion
+        dResult = round(dResult); //round for integer conversion
         if (dResult > MAX_SIG_VALUE) dResult = MAX_SIG_VALUE; //prevent overflow
         else if (dResult < MIN_SIG_VALUE) dResult = MIN_SIG_VALUE;
         while (!_signal_out) { //wait for output to read last sample
