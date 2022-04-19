@@ -18,15 +18,18 @@ double TimeInDouble; //time difference between samples in double in ms
 sem_t OutputSem;
 
 int CSV_out() {
-    FILE* outFile;
-    int err = 0;
+    static FILE* outFile = NULL;
     char path[] = "out.csv";
+    static unsigned long long time = 0;
 
-    outFile = fopen(path,"w");
-    if(!outFile) return -1;
+    if(!outFile) {
+        outFile = fopen(path,"w");
+        if(!outFile) return -1;
+        fprintf(outFile,"Time;Value(generator);Value(filtered)\n");
+    }
 
-    fprintf(outFile,"Time;Value(generator);Value(filtered)\n");
-    fprintf(outFile,"%f;%i;%i\n",TimeInDouble,generatorSample,newSample);
+    fprintf(outFile,"%llu;%i;%i\n",time,generatorSample,newSample);
+    time += PERIOD;
 
     return 0;
 }
@@ -53,9 +56,9 @@ int DAC_out() {
     msgBuf[1] = (unsigned char)(message & 0x00FC);
     msgBuf[0] = (unsigned char)(message >> 8); //gets sent first
     ret = spiWrite(spiHandle, msgBuf, 2); //send message to DAC via SPI (OUTB buffer)
-    printf("%u   %X\n",sampleOut, message);
+    /*printf("%u   %X\n",sampleOut, message);
     printf("%X %X\n", msgBuf[1], msgBuf[0]);
-    printf("return: %i\n\n", ret);
+    printf("return: %i\n\n", ret);*/
 
     //DAC message (unfiltered sample)
     sampleOut = generatorSample - SHRT_MIN;
@@ -86,10 +89,6 @@ int OutputFnc(const struct OUTARGS* pArgs) {
     while(!abortSig) {
         gpioWrite(OUT_PIN,PI_SET);
 
-        /*while(_signal_generate) { //wait for timer flag
-            if(abortSig) return ret;
-        }
-        _signal_generate = true; //reset timer flag*/
         sem_wait(&OutputSem);
         if(abortSig) return ret;
 

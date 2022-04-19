@@ -12,7 +12,7 @@
 #include <pthread.h>
 #include "pigpio.h"
 
-#define TEST_SAMPLES 50
+#define TEST_SAMPLES 500
 
 volatile bool abortSig; //Signal to end in RT-mode, true = end
 unsigned long long* collectedTimes = NULL; //collected time differences by consoleOut()
@@ -55,17 +55,17 @@ int main() {
     timer_fnc(); //start timer
 
     //prepare args for output functions
-    OutArgs.cnt = 3;
+    OutArgs.cnt = 2;
     OutArgs.fnc = malloc(sizeof(OutArgs.fnc)*OutArgs.cnt);
-    OutArgs.fnc[0] = (int*)&consoleOut;
-    OutArgs.fnc[1] = (int*)&DAC_out;
-    OutArgs.fnc[2] = (int*)&CSV_out;
+    //OutArgs.fnc[0] = (int*)&consoleOut;
+    OutArgs.fnc[0] = (int*)&DAC_out;
+    OutArgs.fnc[1] = (int*)&CSV_out;
 
 	ret = pthread_create(&(ThreadsHandle[0]), NULL, (void *(*)(void *)) &OutputFnc, &OutArgs); //output Thread
 	if (ret != 0) return -2;
     ret = pthread_create(&(ThreadsHandle[1]),NULL,filter_RT, NULL); //filter Thread
     if (ret != 0) return -2;
-	ret = generate_RT(RECTANGLE, MAX_SIG_VALUE, PERIOD*8, PERIOD); //start generator
+	ret = generate_RT(RECTANGLE, 20000, PERIOD*80, PERIOD); //start generator
     pthread_join(ThreadsHandle[0], (void**)&(ThreadsReturn[0]));
     pthread_join(ThreadsHandle[1],NULL);
 
@@ -88,6 +88,8 @@ int main() {
 
 void statistic(unsigned long long time_diff) {
 	static bool init = false;
+
+    if(TEST_SAMPLES <= 0) return;
 
 	if (!init) {
 		collectedTimes = malloc(sizeof(unsigned long long));
