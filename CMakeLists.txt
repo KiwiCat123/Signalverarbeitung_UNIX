@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.18)
 project(Signalverarbeitung C)
 
 #set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_FLAGS "-lpthread -lrt -lm")
+set(CMAKE_C_FLAGS "-lpthread -lrt")
 
 add_executable(Signalverarbeitung main.c FileOut.c Filter.c Generator.c Timer.c pigpio.c)
 target_include_directories(Signalverarbeitung PRIVATE include)
-target_link_libraries(Signalverarbeitung pthread rt m)
+target_link_libraries(Signalverarbeitung pthread rt)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE DEBUG)

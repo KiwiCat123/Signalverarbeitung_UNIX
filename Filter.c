@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <limits.h>
 #include "Generator.h"
-#include <math.h>
 
 volatile SignalPoint filterOutBuf; //output buffer for single sample from filter
 volatile SignalPoint genSample = 0; //saved sample from generator (for output)
@@ -39,7 +38,8 @@ SIGNAL_OUT* filter(SIGNAL_OUT SignalInput[], unsigned long amount) {
 
 		FilterOutput[count].time = SignalInput[count].time;
 
-        dResult = round(dResult); //round for integer conversion
+        if (dResult >= 0.0) dResult += 0.5; //round result for integer conversion
+        else dResult -= 0.5;
 		if (dResult > MAX_SIG_VALUE) dResult = MAX_SIG_VALUE; //prevent overflow
 		else if (dResult < MIN_SIG_VALUE) dResult = MIN_SIG_VALUE;
 		FilterOutput[count].point = (short)dResult;
@@ -78,7 +78,8 @@ void* filter_RT() {
         sampleBuffer[bufferPos] = generateOutBuf; //read new sample
         _generator_ready = true; //reset generator flag, sample read from buffer
 
-        dResult = round(dResult); //round for integer conversion
+        if (dResult >= 0.0) dResult += 0.5; //round result for integer conversion
+        else dResult -= 0.5;
         if (dResult > MAX_SIG_VALUE) dResult = MAX_SIG_VALUE; //prevent overflow
         else if (dResult < MIN_SIG_VALUE) dResult = MIN_SIG_VALUE;
         while (!_signal_out) { //wait for output to read last sample
